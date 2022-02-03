@@ -1,0 +1,10 @@
+CMD ["apache2ctl", "-D", "FOREGROUND"]
+WORKDIR usr/lib/cgi-bin
+COPY vine.pl . 
+WORKDIR var/www/html
+COPY vine.html .
+WORKDIR /usr/share/javascript/
+RUN mkdir jquery
+WORKDIR jquery
+COPY jquery.min.js .
+WORKDIR /

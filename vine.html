@@ -1,0 +1,41 @@
+<html">
+  <head>
+    <script type="text/javascript" src="javascript/jquery/jquery.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script>
+
+     function start_vine(){
+        var from = document.getElementById('from').value;
+        var to = document.getElementById('to').value;
+        $.ajax({
+             type: 'POST',
+             url: '/cgi-bin/vine.pl',
+             data: { from: from, to: to },
+             success: function(res) {
+                    alert("your from is: " + res.result.from + " and your to is: "+res.result.to);
+                   },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+        }
+
+    </script>
+  </head>
+  <body>
+    <div class="main_page">
+    <h1> Vine Entry </h1>
+    <div>
+    Enter from letters: 
+    <input type="text" id="from" minlength="4" maxlength="4" size="4">
+    </div>
+    <div>
+    Enter to letters:
+    <input type="text" id="to" minlength="4" maxlength="4" size="4">
+    </div>
+    <button onclick="start_vine()">Click me</button>
+    </div>
+  </body>
+</html>
+
