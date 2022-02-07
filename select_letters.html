@@ -1,0 +1,44 @@
+<html">
+  <head>
+    <link rel="stylesheet" type="text/css" href="min.css">
+    <script type="text/javascript" src="javascript/jquery/jquery.min.js"></script>
+
+    <script>
+
+     function start_vine(){
+        var from = document.getElementById('from').value;
+        var to = document.getElementById('to').value;
+        var select = document.getElementById('select').value;
+        $.ajax({
+             type: 'POST',
+             url: '/cgi-bin/dispatch.pl',
+             data: { from: from, to: to, select: select },
+             success: function(res) {
+                    alert("your from is: " + res.result.from + " and your to is: "+res.result.to);
+                   },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+        }
+
+    </script>
+  </head>
+  <body>
+    <div>
+    <input type="hidden" id="select" value="1">
+    <h1> Vine Entry </h1>
+    <table>
+    <tr><td>Enter from letters: </td>
+    <td><input type="text" id="from" minlength="4" maxlength="4" size="4"></td>
+    <tr><td>Enter to letters:</td>
+    <td><input type="text" id="to" minlength="4" maxlength="4" size="4"></td>
+    <tr>
+        <td><button onclick="start_vine()">Create Letter Combinations</button></td>
+        <td><button onclick="window.location.href='/index.html'">Main Menu</button></td>
+    </tr>
+    </table>
+    </div>
+  </body>
+</html>
+

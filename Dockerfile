@@ -11,13 +11,7 @@ RUN apt-get install --yes libyaml-perl
 WORKDIR etc/apache2/mods-enabled
 RUN ln -s ../mods-available/cgi.load
 EXPOSE 80
-CMD ["apache2ctl", "-D", "FOREGROUND"]
-WORKDIR usr/lib/cgi-bin
-COPY vine.pl . 
-WORKDIR var/www/html
-COPY vine.html .
 WORKDIR /usr/share/javascript/
 RUN mkdir jquery
-WORKDIR jquery
-COPY jquery.min.js .
 WORKDIR /
+CMD ["apache2ctl", "-D", "FOREGROUND"]
