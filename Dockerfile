@@ -1,5 +1,11 @@
 FROM debian:latest
 RUN apt-get update
+RUN apt-get install --yes wget
+RUN apt-get install --yes gnupg 
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+RUN apt-get update
+RUN apt-get install --yes google-chrome-stable
 RUN apt-get install --yes apache2
 RUN apt-get install --yes libcgi-pm-perl
 RUN apt-get install --yes libjson-perl 
