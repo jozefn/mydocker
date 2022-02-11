@@ -7,7 +7,7 @@ RUN apt-get install --yes libgconf-2-4 libatk1.0-0 libatk-bridge2.0-0 libgdk-pix
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
 WORKDIR /tmp/
-RUN wget https://chromedriver.storage.googleapis.com/77.0.3865.40/chromedriver_linux64.zip
+RUN wget https://chromedriver.storage.googleapis.com/98.0.4758.80/chromedriver_linux64.zip
 RUN unzip chromedriver_linux64.zip
 RUN ls -l
 RUN mv chromedriver /usr/bin/
@@ -15,7 +15,6 @@ RUN chown root:root /usr/bin/chromedriver
 RUN chmod +x /usr/bin/chromedriver
 RUN ls -l /usr/bin/chromedriver
 WORKDIR /
-RUN chromedriver --version
 RUN apt-get update
 RUN apt-get install --yes google-chrome-stable
 RUN apt-get install --yes apache2
@@ -32,4 +31,11 @@ EXPOSE 80
 WORKDIR /usr/share/javascript/
 RUN mkdir jquery
 WORKDIR /
+RUN cpan install Selenium::Chrome
+RUN cpan install Selenium::Remote::Driver
+COPY ./dispatch.pl /usr/lib/cgi-bin/
+COPY ./select_letters.html /var/www/html/
+COPY ./index.html /var/www/html/
+COPY ./jquery.min.js /usr/share/javascript/jquery/
+COPY ./ min.css /var/www/html/
 CMD ["apache2ctl", "-D", "FOREGROUND"]
