@@ -25,6 +25,8 @@ RUN apt-get install --yes sqlite3
 RUN apt-get install --yes libdbd-sqlite3-perl
 RUN apt-get install --yes libfile-slurp-perl 
 RUN apt-get install --yes libyaml-perl
+RUN apt-get install --yes libdate-manip-perl 
+RUN apt-get install --yes vim
 WORKDIR etc/apache2/mods-enabled
 RUN ln -s ../mods-available/cgi.load
 EXPOSE 80
@@ -38,4 +40,12 @@ COPY ./select_letters.html /var/www/html/
 COPY ./index.html /var/www/html/
 COPY ./jquery.min.js /usr/share/javascript/jquery/
 COPY ./ min.css /var/www/html/
+WORKDIR /home
+RUN mkdir vine
+WORKDIR /home/vine
+RUN mkdir code
+WORKDIR /home/vine/code
+COPY ./vine/vine_parse /vine/code/
+COPY ./vine/Vine.pm /vine/code/
+WORKDIR /
 CMD ["apache2ctl", "-D", "FOREGROUND"]
