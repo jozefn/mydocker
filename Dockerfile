@@ -26,7 +26,6 @@ RUN apt-get install --yes libdbd-sqlite3-perl
 RUN apt-get install --yes libfile-slurp-perl 
 RUN apt-get install --yes libyaml-perl
 RUN apt-get install --yes libdate-manip-perl 
-RUN apt-get install --yes vim
 WORKDIR etc/apache2/mods-enabled
 RUN ln -s ../mods-available/cgi.load
 EXPOSE 80
