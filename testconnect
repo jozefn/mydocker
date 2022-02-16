@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+
+use Selenium::Chrome;
+use JSON;
+use File::Slurp;
+use Data::Dumper;
+
+
+
+my $driver = Selenium::Chrome->new(
+  extra_capabilities => {
+    'goog:chromeOptions' => {
+      args => ['headless', 'disable-gpu', 'window-size=1920,1080', 'no-sandbox' ],
+        prefs => {
+          'download.default_directory' => '/home/vine/files'
+      },
+    }
+  }
+);
+
+my $target = "https://vinelink.vineapps.com/search/CA/Person";
+$driver->get($target);
+my $title = $driver->get_title;
+print "title: $title\n";
+
+my ($button, $input, $element,$child_element);
+
+$button = $driver->find_element('//*[@id="vl-menu-options-sign-in-button"]');
+if ($button){
+    $button->click();
+    sleep 3;
+    eval {
+        $input = $driver->find_element('//*[@id="mat-input-0"]');
+print "sendkeys\n";
+        $input->send_keys('jozefn777');
+        $input = $driver->find_element('//*[@id="mat-input-1"]');
+        $input->send_keys('BezelcanopyCar1b');
+print "sendkeys\n";
+        sleep 3;
+        $button = $driver->find_element('//*[@id="vl-login-btn"]');
+        $button->submit();
+print "subit user/pass \n";
+        sleep 2;
+        $element = $driver->find_element('.vl-error-popup');
+        if ($element){
+            print "Login did not happen\n";
+            exit();
+        }
+    };
+    if ($@){
+        print "Error with click - $@";  
+        die();
+    }
+}
+print "logged in\n";
+eval{
+     $element = $driver->find_element('//*/vl-person-search-form/form/div[2]/mat-form-field/div/div[1]/div/span/label');
+     if ($element){
+        $button = $element->selectByVisibleText("Name");
+        $button->click();
+     }
+};
+
+if ($@){
+    print "error with execute script - $@";
+    die();
+}
+
+$driver->shutdown_binary;
+
+
