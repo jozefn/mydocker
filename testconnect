@@ -59,14 +59,16 @@ print "subit user/pass \n";
 sleep 3;
 
 print "at select\n";
-$driver->execute_script(q~var ele = document.querySelector('#person-search-type-select');
-                          ele.setAttribute('aria-expanded', 'true'); ~);
+$button = $driver->find_element('//*div[contains(@class, "mat-form-field-flex") and contains(@class, "ng-tns-c77-30
+")]');
+if ($button){
+    $button->click();
+}
 sleep 3;
-print " setting name in span\n";
-$driver->execute_script(q~ var ele = document.querySelector('#person-search-type-select');
-                           var s =  ele.querySelector("div div span span");
-                           s.innerHTML = "Name"; ~);
-sleep 3;
+$button = $driver->find_element('//*[@id="mat-option-43"]');
+if ($button){
+    $button->click();
+}
 
 $select = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
 $select->is_selected;
