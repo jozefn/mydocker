@@ -23,7 +23,8 @@ $driver->get($target);
 my $title = $driver->get_title;
 print "title: $title\n";
 
-my ($button, $input, $element,$child_element);
+my ($button, $input, $element,$select, $search_value);
+$search_value = 'Rodriguez';
 
 $button = $driver->find_element('//*[@id="vl-menu-options-sign-in-button"]');
 if ($button){
@@ -41,31 +42,136 @@ print "sendkeys\n";
         $button->submit();
 print "subit user/pass \n";
         sleep 2;
-        $element = $driver->find_element('.vl-error-popup');
-        if ($element){
-            print "Login did not happen\n";
-            exit();
+        eval{
+            $element = $driver->find_element('//*[@id="mat-dialog-2"]/vl-error-dialog/div');
+        };
+        if (!$@){
+           print "Login did not happen\n";
+           exit();
         }
+
     };
     if ($@){
         print "Error with click - $@";  
         die();
     }
 }
-print "logged in\n";
-eval{
-     $element = $driver->find_element('//*/vl-person-search-form/form/div[2]/mat-form-field/div/div[1]/div/span/label');
-     if ($element){
-        $button = $element->selectByVisibleText("Name");
-        $button->click();
-     }
-};
+sleep 3;
 
-if ($@){
-    print "error with execute script - $@";
-    die();
+print "at select\n";
+$driver->execute_script(q~var ele = document.querySelector('#person-search-type-select');
+                          ele.setAttribute('aria-expanded', 'true'); ~);
+sleep 3;
+print " setting name in span\n";
+$driver->execute_script(q~ var ele = document.querySelector('#person-search-type-select');
+                           var s =  ele.querySelector("div div span span");
+                           s.innerHTML = "Name"; ~);
+sleep 3;
+
+$select = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
+$select->is_selected;
+
+print "at input\n";
+$input = $driver->find_element('//*[@id="person-last-name-input"]');
+$input->send_keys($search_value);
+
+while (1){
+    $button = $driver->find_element('//*[@id="search_button"]');
+    if ($button){
+        $button->click();
+        last;
+    }
 }
 
-$driver->shutdown_binary;
+print "before javascript\n";
+while(1){
+    $action = read_pages();
+    last if ( $action eq 'stop');
+}
+
+sub read_pages{
+    my $no_records_found = 0;
+    my $cnt =0;
+    while (1){
+        $element = $driver->find_element('//*[@id="person-search-search-terms"]');
+        $no_records = $driver->find_element('//*[@id="main"]/vl-person-search-results/div/vl-person-not-found');
+        if ($element || $no_records){
+            $no_records_found = 1 if ($no_records);
+            last;
+        } else {
+            sleep 3;
+        }
+    }
+    return 'stop' if ($no_records_found);
+    
+    $driver->execute_script(qq~
+            var tag = "$cnt"; var dfile= '${search_value}_download_'+tag+'.csv';
+            var data=[];
+            var head=[]; head.push('Name');
+            head.push('Facility');
+            head.push('ID');
+            head.push('Status');
+            head.push('Gender');
+            data.push(head.join(","));
+ 
+            var person_cards = document.querySelectorAll('html>body>vl-vine-link-app>div>div>main>vl-person-search-results>div>div>vl-person-card');
+
+
+            for (var i=0;i<person_cards.length;++i){
+                var r=[];
+                var tag = person_cards[i].querySelector('mat-card>mat-card-title>h2');
+                r.push(tag.innerHTML);
+                var tag1 = person_cards[i].querySelector('#person-reporting-agency-name');
+                if (tag1){
+                    r.push(tag1.innerText);
+                } else {
+                    r.push("No agency");
+                }
+                var tag2 = person_cards[i].querySelector('#person-person-context-refid-value');
+                if (tag2){
+                    r.push(tag2.innerText);
+                } else {
+                    r.push("No id found");
+                }
+                var tag3 = person_cards[i].querySelector('#person-custody-status-value');
+                if (tag3){
+                    r.push(tag3.innerText);
+                } else {
+                    r.push("No status found")
+                }
+ 
+                var tag4 = person_cards[i].querySelector('#person-gender-value');
+                if (tag4){
+                    r.push(tag4.innerText);
+                } else {
+                    r.push("No Gender Found");
+                }
+  
+                data.push(r.join(","));
+
+  
+
+        }
+
+
+        csv_file = new Blob([data.join("")], {type: "text/csv"});
+
+        download_link = document.createElement("a");
+
+        download_link.download = dfile;
+
+        download_link.href = window.URL.createObjectURL(csv_file);
+
+        download_link.style.display = "none";
+
+        document.body.appendChild(download_link);
+
+        download_link.click();
+        ~
+    );
+    return 'stop';
+}
+
+
 
 
