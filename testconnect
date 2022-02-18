@@ -59,54 +59,126 @@ print "subit user/pass \n";
 sleep 3;
 
 print "at select\n";
-$button = $driver->find_element('//*div[contains(@class, "mat-form-field-flex") and contains(@class, "ng-tns-c77-30
-")]');
-if ($button){
-    $button->click();
+while(1){
+    $element = $driver->find_element('//*[@id="person-search-type-select"]');
+
+    if ($element){
+        $driver->execute_script(qq~ var b = document.querySelector('#person-search-type-select');
+                                b.click();
+                            ~);
+        last;
+    } else {
+        sleep 3;
+    }
 }
 sleep 3;
-$button = $driver->find_element('//*[@id="mat-option-43"]');
-if ($button){
-    $button->click();
-}
+print "searching\n";
+my $action = 0;
+while(1){
 
-$select = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
-$select->is_selected;
-
-print "at input\n";
-$input = $driver->find_element('//*[@id="person-last-name-input"]');
-$input->send_keys($search_value);
-
-while (1){
-    $button = $driver->find_element('//*[@id="search_button"]');
-    if ($button){
-        $button->click();
+    $element = $driver->find_element('//*[@id="person-search-type-select-panel"]');
+print "element: $element\n";
+    if ($element){
+        $action->set
         last;
+    } else {
+        sleep 3;
     }
 }
 
+print "at input $search_value\n";
+
+my $found_checkbox = 0;
+$action = 0;
+while (1){
+    $action = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
+print " checkbox action: $action\n";
+    if ($action){
+        $action->set_selected;
+        $found_checkbox = 1;
+        last;
+    } else {
+        sleep 3;
+    }
+}
+
+print "found_checkbox: $found_checkbox\n";
+
+my $js1 = qq~
+            var action = 0;
+            var b = document.getElementById('person-last-name-input');
+            if (b){
+                b.value = '$search_value';
+                action = 1;
+            }
+                return action;
+    ~;
+
+while (1){
+    my $action =0;
+    if ($found_checkbox){
+        $action = $driver->execute_script($js1);
+        print "action: $action\n";
+        if ($action){
+            last;
+        } else {
+            sleep 3;
+        }
+    }
+}
+
+
+print "click search\n";
+my $js2 = qq~
+            var action = 0;
+            if (document.querySelector('#search_button')){
+               document.querySelector('#search_button').click();
+               action = 1;
+            }
+            return action;
+    ~;
+
+while (1){
+    my $action = $driver->execute_script($js2);
+    print "action: $action\n";
+    if ($action){
+        last;
+    } else {
+        sleep 3;
+    }
+}
 print "before javascript\n";
 while(1){
     $action = read_pages();
     last if ( $action eq 'stop');
 }
 
+my $js_search_terms = qq{
+        var action = 0;
+        if (document.querySelector('#person-search-search-terms' ~ div vl-person-not-found') ){
+            action = 1;
+        }
+        return action;
+    };
+
 sub read_pages{
     my $no_records_found = 0;
     my $cnt =0;
+    my $action;
     while (1){
-        $element = $driver->find_element('//*[@id="person-search-search-terms"]');
-        $no_records = $driver->find_element('//*[@id="main"]/vl-person-search-results/div/vl-person-not-found');
-        if ($element || $no_records){
-            $no_records_found = 1 if ($no_records);
+        $action = $driver->execute_script($js_search_terms);
+print " readpages $action\n";
+        if ($action){
+            $no_records_found = 1;
             last;
         } else {
             sleep 3;
         }
     }
     return 'stop' if ($no_records_found);
-    
-    $driver->execute_script(qq~
+    while(1){ 
+        print "at creation of download\n";
+        $driver->execute_script(qq~
             var tag = "$cnt"; var dfile= '${search_value}_download_'+tag+'.csv';
             var data=[];
             var head=[]; head.push('Name');
@@ -151,10 +223,7 @@ sub read_pages{
   
                 data.push(r.join(","));
 
-  
-
-        }
-
+            }
 
         csv_file = new Blob([data.join("")], {type: "text/csv"});
 
@@ -169,10 +238,49 @@ sub read_pages{
         document.body.appendChild(download_link);
 
         download_link.click();
-        ~
-    );
+
+        ~);
+        unless (check_continue()){
+            last;
+        }
+    }
     return 'stop';
 }
+
+sub check_continue{
+    my $tcount = 0;
+    my $continue = 0;
+    my $js = qq~
+       var continue = 0;
+       if (document.querySelector('#person-search-pagination-button') ){
+          document.querySelector('#person-search-pagination-button').click();
+          continue = 1;
+       }
+       return continue;
+    ~;
+
+print "Check for load page button\n";
+    while(1){
+        $continue =  $driver->execute_script($js);
+        if ($continue){
+            last;
+        } else {
+            sleep 3;
+            $tcount++;
+        }
+        if ($tcount > 10){
+            $continue = 0;
+            last;
+        }
+    }
+    return $continue;
+}
+
+sub read_log{
+    my $string = Dumper($driver->get_log("browser"));
+    print "l: $string\n";
+}
+
 
 
 
