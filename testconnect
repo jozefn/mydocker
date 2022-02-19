@@ -73,21 +73,41 @@ while(1){
 }
 sleep 3;
 print "searching\n";
-my $action = 0;
-while(1){
+my $js1 = qq~
+            var action = 0;
+            var b = document.querySelector('#person-last-name-input');
+            if (b){
+                b.value = '$search_value';
+                action = 1;
+            }
+            return action;
+    ~;
 
-    $element = $driver->find_element('//*[@id="person-search-type-select-panel"]');
-print "element: $element\n";
-    if ($element){
-        $action->set
+while (1){
+    my $action =0;
+    $action = $driver->execute_script($js1);
+    print "action: $action\n";
+    if ($action){
         last;
     } else {
         sleep 3;
     }
 }
 
-print "at input $search_value\n";
 
+while(1){
+
+    $element = $driver->find_element('//*[@id="person-search-type-select-panel"]');
+print "element: $element\n";
+    if ($element){
+        last;
+    } else {
+        sleep 3;
+    }
+}
+
+
+print " checkbox search\n";
 my $found_checkbox = 0;
 $action = 0;
 while (1){
@@ -103,29 +123,6 @@ print " checkbox action: $action\n";
 }
 
 print "found_checkbox: $found_checkbox\n";
-
-my $js1 = qq~
-            var action = 0;
-            var b = document.getElementById('person-last-name-input');
-            if (b){
-                b.value = '$search_value';
-                action = 1;
-            }
-                return action;
-    ~;
-
-while (1){
-    my $action =0;
-    if ($found_checkbox){
-        $action = $driver->execute_script($js1);
-        print "action: $action\n";
-        if ($action){
-            last;
-        } else {
-            sleep 3;
-        }
-    }
-}
 
 
 print "click search\n";
