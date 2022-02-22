@@ -10,7 +10,7 @@ use Data::Dumper;
 my $driver = Selenium::Chrome->new(
   extra_capabilities => {
     'goog:chromeOptions' => {
-      args => ['headless', 'disable-gpu', 'window-size=1920,1080', 'no-sandbox', 'disable-extensions' ,'start-maximized' ],
+      args => ['headless', 'disable-notifications', 'disable-gpu', 'window-size=1920,1080', 'no-sandbox', 'disable-extensions' ,'start-maximized' ],
         prefs => {
           'download.default_directory' => '/home/vine/files'
       },
@@ -29,41 +29,34 @@ my ($button, $input, $element,$select, $search_value);
 $search_value = 'Rodriguez';
 
 $driver->capture_screenshot("screenshot".${cnt}++.".png");
-$button = $driver->find_element('//*[@id="vl-menu-options-sign-in-button"]');
-if ($button){
+if ( element_exists({driver=>$driver,exp=>'//*[@id="vl-menu-options-sign-in-button"]'})){
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
+    $button = $driver->find_element('//*[@id="vl-menu-options-sign-in-button"]');
     $button->click();
     sleep 3;
-    eval {
-        $input = $driver->find_element('//*[@id="mat-input-0"]');
-print "sendkeys\n";
-        $input->send_keys('jozefn777');
-        $input = $driver->find_element('//*[@id="mat-input-1"]');
-        $input->send_keys('BezelcanopyCar1b');
-print "sendkeys\n";
-        sleep 3;
-        $button = $driver->find_element('//*[@id="vl-login-btn"]');
-        $button->submit();
-print "subit user/pass \n";
-        sleep 2;
-print "check for error\n";
-        eval{
-            $element = $driver->find_element('//*[@id="mat-dialog-2"]/vl-error-dialog/div');
-        };
-        if (!$@){
-           print "Login did not happen\n";
-           exit();
-        }
-
-    };
-    if ($@){
-        print "Error with click - $@";  
-        die();
-    }
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
 }
-check_spinner($driver);
-
+if ( element_exists({driver=>$driver,exp=>'//*[@id="mat-input-0"]'})){
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
+    $input = $driver->find_element('//*[@id="mat-input-0"]');
+    $input->send_keys('jozefn777');
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
+    $input = $driver->find_element('//*[@id="mat-input-1"]');
+    $input->send_keys('BezelcanopyCar1b');
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
+    sleep 3;
+}
+if ( element_exists({driver=>$driver,exp=>'//*[@id="vl-login-btn"]'})){
+        $driver->capture_screenshot("screenshot".${cnt}++.".png");
+        $button = $driver->find_element('//*[@id="vl-login-btn"]');
+        $button->submit;
+        $driver->capture_screenshot("screenshot".${cnt}++.".png");
+        print "subit user/pass \n";
+        sleep 2;
+}
 
 while (1){
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
     if ( element_exists({driver=>$driver,exp=>'//*[@id="person-last-name-input"]'}) ){
         $element = $driver->find_element('//*[@id="person-last-name-input"]');
         print " element: $element\n";
@@ -74,7 +67,6 @@ while (1){
 }
 sleep 3;
 
-check_spinner($driver);
 
 print " checkbox search\n";
 my $found_checkbox = 0;
@@ -101,8 +93,6 @@ while(1){
         last;
     }
 };
-
-check_spinner($driver);
 
 $action->submit;
 
