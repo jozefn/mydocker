@@ -10,13 +10,15 @@ use Data::Dumper;
 my $driver = Selenium::Chrome->new(
   extra_capabilities => {
     'goog:chromeOptions' => {
-      args => ['headless', 'disable-gpu', 'window-size=1920,1080', 'no-sandbox' ],
+      args => ['headless', 'disable-gpu', 'window-size=1920,1080', 'no-sandbox', 'disable-extensions' ,'start-maximized' ],
         prefs => {
           'download.default_directory' => '/home/vine/files'
       },
     }
   }
 );
+
+my $cnt = 0;
 
 my $target = "https://vinelink.vineapps.com/search/CA/Person";
 $driver->get($target);
@@ -26,6 +28,7 @@ print "title: $title\n";
 my ($button, $input, $element,$select, $search_value);
 $search_value = 'Rodriguez';
 
+$driver->capture_screenshot("screenshot".${cnt}++.".png");
 $button = $driver->find_element('//*[@id="vl-menu-options-sign-in-button"]');
 if ($button){
     $button->click();
@@ -42,6 +45,7 @@ print "sendkeys\n";
         $button->submit();
 print "subit user/pass \n";
         sleep 2;
+print "check for error\n";
         eval{
             $element = $driver->find_element('//*[@id="mat-dialog-2"]/vl-error-dialog/div');
         };
@@ -56,69 +60,34 @@ print "subit user/pass \n";
         die();
     }
 }
-sleep 3;
+check_spinner($driver);
 
-print "at select\n";
-while(1){
-    $element = $driver->find_element('//*[@id="person-search-type-select"]');
-
-    if ($element){
-        $driver->execute_script(qq~ var b = document.querySelector('#person-search-type-select');
-                                b.click();
-                            ~);
-        last;
-    } else {
-        sleep 3;
-    }
-}
-sleep 3;
-print "searching\n";
-my $js1 = qq~
-            var action = 0;
-            var b = document.querySelector('#person-last-name-input');
-            if (b){
-                b.value = '$search_value';
-                action = 1;
-            }
-            return action;
-    ~;
 
 while (1){
-    my $action =0;
-    $action = $driver->execute_script($js1);
-    print "action: $action\n";
-    if ($action){
+    if ( element_exists({driver=>$driver,exp=>'//*[@id="person-last-name-input"]'}) ){
+        $element = $driver->find_element('//*[@id="person-last-name-input"]');
+        print " element: $element\n";
+        $element->send_keys("$search_value");
         last;
-    } else {
-        sleep 3;
     }
+    sleep 3;
 }
+sleep 3;
 
-
-while(1){
-
-    $element = $driver->find_element('//*[@id="person-search-type-select-panel"]');
-print "element: $element\n";
-    if ($element){
-        last;
-    } else {
-        sleep 3;
-    }
-}
-
+check_spinner($driver);
 
 print " checkbox search\n";
 my $found_checkbox = 0;
 $action = 0;
 while (1){
-    $action = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
-print " checkbox action: $action\n";
-    if ($action){
-        $action->set_selected;
+    if ( element_exists({driver=>$driver,exp=>'//*[@id="partial-search-checkbox-input"]'}) ){
+        $action = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
+        unless ($action->is_selected){
+            $action->set_selected;
+            $action->toggle;
+        }
         $found_checkbox = 1;
         last;
-    } else {
-        sleep 3;
     }
 }
 
@@ -126,29 +95,24 @@ print "found_checkbox: $found_checkbox\n";
 
 
 print "click search\n";
-my $js2 = qq~
-            var action = 0;
-            if (document.querySelector('#search_button')){
-               document.querySelector('#search_button').click();
-               action = 1;
-            }
-            return action;
-    ~;
-
-while (1){
-    my $action = $driver->execute_script($js2);
-    print "action: $action\n";
-    if ($action){
+while(1){
+    if ( element_exists({driver=>$driver,exp=>'//*[@id="search_button"]'}) ){
+        $action = $driver->find_element('//*[@id="search_button"]');
         last;
-    } else {
-        sleep 3;
     }
-}
+};
+
+check_spinner($driver);
+
+$action->submit;
+
 print "before javascript\n";
 while(1){
     $action = read_pages();
     last if ( $action eq 'stop');
 }
+
+$driver->shutdown_binary;
 
 my $js_search_terms = qq{
         var action = 0;
@@ -279,6 +243,28 @@ sub read_log{
 }
 
 
+sub check_spinner{
+    my $driver = shift;
+    while(1){
+        unless ( 
+            element_exists({driver=>$driver,exp=>'/html/body/vl-vine-link-app/vl-loader/div/div/div/mat-spinner'}) 
+            ){
+            last;
+        }
+        sleep 10;
+    }
+}
 
+
+sub element_exists{
+    my $args = shift;
+    my $driver = $args->{driver};
+    my $exp = $args->{exp};
+    my $values;
+    $values = $driver->find_elements($exp);
+    my $cnt = scalar @{$values};
+    return ($cnt);
+}
+    
 
 
