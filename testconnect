@@ -70,6 +70,10 @@ if ( element_exists({driver=>$driver,exp=>'//*[@id="person-search-type-select"]'
      $element = $driver->find_element('//*[@id="person-search-type-select"]/div');
      $element->click;
 }
+if ( element_exists({driver=>$driver,exp=>'//*[@id="person-search-type-select-panel"]'}) ){
+     $element = $driver->find_element('//*[@id="person-search-type-select-panel"]/mat-option');
+     $element->click;
+}
 
 $driver->capture_screenshot("screenshot".${cnt}++.".png");
 
@@ -83,13 +87,10 @@ if ( element_exists({driver=>$driver,exp=>'//*[@id="person-last-name-input"]'}) 
 print " checkbox search\n";
 my $found_checkbox = 0;
 $action = 0;
-if ( element_exists({driver=>$driver,exp=>'//*[@id="partial-search-checkbox-input"]'}) ){
+if ( element_exists({driver=>$driver,exp=>'//*[@id="partial-search-checkbox"]'}) ){
      $driver->capture_screenshot("screenshot".${cnt}++.".png");
-     $action = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
-     unless ($action->is_selected){
-        $action->set_selected;
-        $action->toggle;
-     }
+     $action = $driver->find_element('//*[@id="partial-search-checkbox"]/label/span/input');
+     $action->click;
      $found_checkbox = 1;
      $driver->capture_screenshot("screenshot".${cnt}++.".png");
 }
