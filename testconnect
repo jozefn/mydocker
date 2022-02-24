@@ -28,8 +28,13 @@ print "title: $title\n";
 my ($button, $input, $element,$select, $search_value);
 $search_value = 'Rodriguez';
 
+check_pp($driver);
+
 $driver->capture_screenshot("screenshot".${cnt}++.".png");
 if ( element_exists({driver=>$driver,exp=>'//*[@id="vl-menu-options-sign-in-button"]'})){
+
+    check_pp($driver);
+
     $driver->capture_screenshot("screenshot".${cnt}++.".png");
     $button = $driver->find_element('//*[@id="vl-menu-options-sign-in-button"]');
     $button->click();
@@ -37,6 +42,9 @@ if ( element_exists({driver=>$driver,exp=>'//*[@id="vl-menu-options-sign-in-butt
     $driver->capture_screenshot("screenshot".${cnt}++.".png");
 }
 if ( element_exists({driver=>$driver,exp=>'//*[@id="mat-input-0"]'})){
+
+    check_pp($driver);
+
     $driver->capture_screenshot("screenshot".${cnt}++.".png");
     $input = $driver->find_element('//*[@id="mat-input-0"]');
     $input->send_keys('jozefn777');
@@ -55,176 +63,145 @@ if ( element_exists({driver=>$driver,exp=>'//*[@id="vl-login-btn"]'})){
         sleep 2;
 }
 
-while (1){
-    $driver->capture_screenshot("screenshot".${cnt}++.".png");
-    if ( element_exists({driver=>$driver,exp=>'//*[@id="person-last-name-input"]'}) ){
-        $element = $driver->find_element('//*[@id="person-last-name-input"]');
-        print " element: $element\n";
-        $element->send_keys("$search_value");
-        last;
-    }
-    sleep 3;
+$driver->capture_screenshot("screenshot".${cnt}++.".png");
+
+
+if ( element_exists({driver=>$driver,exp=>'//*[@id="person-search-type-select"]'}) ){
+     $element = $driver->find_element('//*[@id="person-search-type-select"]/div');
+     $element->click;
 }
-sleep 3;
 
+$driver->capture_screenshot("screenshot".${cnt}++.".png");
 
+if ( element_exists({driver=>$driver,exp=>'//*[@id="person-last-name-input"]'}) ){
+     $element = $driver->find_element('//*[@id="person-last-name-input"]');
+     $driver->capture_screenshot("screenshot".${cnt}++.".png");
+     $element->send_keys("$search_value");
+     $driver->capture_screenshot("screenshot".${cnt}++.".png");
+}
+    
 print " checkbox search\n";
 my $found_checkbox = 0;
 $action = 0;
-while (1){
-    if ( element_exists({driver=>$driver,exp=>'//*[@id="partial-search-checkbox-input"]'}) ){
-        $action = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
-        unless ($action->is_selected){
-            $action->set_selected;
-            $action->toggle;
-        }
-        $found_checkbox = 1;
-        last;
-    }
+if ( element_exists({driver=>$driver,exp=>'//*[@id="partial-search-checkbox-input"]'}) ){
+     $driver->capture_screenshot("screenshot".${cnt}++.".png");
+     $action = $driver->find_element('//*[@id="partial-search-checkbox-input"]');
+     unless ($action->is_selected){
+        $action->set_selected;
+        $action->toggle;
+     }
+     $found_checkbox = 1;
+     $driver->capture_screenshot("screenshot".${cnt}++.".png");
 }
 
 print "found_checkbox: $found_checkbox\n";
 
 
 print "click search\n";
-while(1){
-    if ( element_exists({driver=>$driver,exp=>'//*[@id="search_button"]'}) ){
-        $action = $driver->find_element('//*[@id="search_button"]');
-        last;
-    }
+if ( element_exists({driver=>$driver,exp=>'//*[@id="search_button"]'}) ){
+   $driver->capture_screenshot("screenshot".${cnt}++.".png");
+   $action = $driver->find_element('//*[@id="search_button"]');
+   $action->submit;
 };
 
-$action->submit;
 
+        $driver->capture_screenshot("screenshot".${cnt}++.".png");
 print "before javascript\n";
-while(1){
-    $action = read_pages();
-    last if ( $action eq 'stop');
+
+if ( element_exists({driver=>$driver,exp=>'//*[@id="pnf-main-header"]'}) ){
+    print " no records found \n";
+    $driver->shutdown_binary;
+    exit();
 }
 
-$driver->shutdown_binary;
-
-my $js_search_terms = qq{
-        var action = 0;
-        if (document.querySelector('#person-search-search-terms' ~ div vl-person-not-found') ){
-            action = 1;
-        }
-        return action;
-    };
-
-sub read_pages{
-    my $no_records_found = 0;
-    my $cnt =0;
-    my $action;
-    while (1){
-        $action = $driver->execute_script($js_search_terms);
-print " readpages $action\n";
-        if ($action){
-            $no_records_found = 1;
-            last;
-        } else {
-            sleep 3;
-        }
-    }
-    return 'stop' if ($no_records_found);
+if ( element_exists({driver=>$driver,exp=>'//*[@id="person-search-search-terms"]'}) ){
+    my $cnt = 0;
     while(1){ 
         print "at creation of download\n";
+        $driver->capture_screenshot("screenshot".${cnt}++.".png");
+        $cnt++;
         $driver->execute_script(qq~
-            var tag = "$cnt"; var dfile= '${search_value}_download_'+tag+'.csv';
-            var data=[];
-            var head=[]; head.push('Name');
-            head.push('Facility');
-            head.push('ID');
-            head.push('Status');
-            head.push('Gender');
-            data.push(head.join(","));
- 
-            var person_cards = document.querySelectorAll('html>body>vl-vine-link-app>div>div>main>vl-person-search-results>div>div>vl-person-card');
-
-
-            for (var i=0;i<person_cards.length;++i){
-                var r=[];
-                var tag = person_cards[i].querySelector('mat-card>mat-card-title>h2');
-                r.push(tag.innerHTML);
-                var tag1 = person_cards[i].querySelector('#person-reporting-agency-name');
-                if (tag1){
-                    r.push(tag1.innerText);
-                } else {
-                    r.push("No agency");
-                }
-                var tag2 = person_cards[i].querySelector('#person-person-context-refid-value');
-                if (tag2){
-                    r.push(tag2.innerText);
-                } else {
-                    r.push("No id found");
-                }
-                var tag3 = person_cards[i].querySelector('#person-custody-status-value');
-                if (tag3){
-                    r.push(tag3.innerText);
-                } else {
-                    r.push("No status found")
-                }
- 
-                var tag4 = person_cards[i].querySelector('#person-gender-value');
-                if (tag4){
-                    r.push(tag4.innerText);
-                } else {
-                    r.push("No Gender Found");
-                }
-  
-                data.push(r.join(","));
-
-            }
-
-        csv_file = new Blob([data.join("")], {type: "text/csv"});
-
-        download_link = document.createElement("a");
-
-        download_link.download = dfile;
-
-        download_link.href = window.URL.createObjectURL(csv_file);
-
-        download_link.style.display = "none";
-
-        document.body.appendChild(download_link);
-
-        download_link.click();
-
-        ~);
-        unless (check_continue()){
-            last;
+	            var tag = "$cnt"; 
+                var dfile= '${search_value}_download_'+tag+'.csv';
+	            var data=[];
+	            var head=[]; head.push('Name');
+	            head.push('Facility');
+	            head.push('ID');
+	            head.push('Status');
+	            head.push('Gender');
+	            data.push(head.join(","));
+	 
+	            var person_cards = document.querySelectorAll('html>body>vl-vine-link-app>div>div>main>vl-person-search-results>div>div>vl-person-card');
+	
+	
+	            for (var i=0;i<person_cards.length;++i){
+	                var r=[];
+	                var tag = person_cards[i].querySelector('mat-card>mat-card-title>h2');
+	                r.push(tag.innerHTML);
+	                var tag1 = person_cards[i].querySelector('#person-reporting-agency-name');
+	                if (tag1){
+	                    r.push(tag1.innerText);
+	                } else {
+	                    r.push("No agency");
+	                }
+	                var tag2 = person_cards[i].querySelector('#person-person-context-refid-value');
+	                if (tag2){
+	                    r.push(tag2.innerText);
+	                } else {
+	                    r.push("No id found");
+	                }
+	                var tag3 = person_cards[i].querySelector('#person-custody-status-value');
+	                if (tag3){
+	                    r.push(tag3.innerText);
+	                } else {
+	                    r.push("No status found")
+	                }
+	 
+	                var tag4 = person_cards[i].querySelector('#person-gender-value');
+	                if (tag4){
+	                    r.push(tag4.innerText);
+	                } else {
+	                    r.push("No Gender Found");
+	                }
+	  
+	                data.push(r.join(","));
+	
+	            }
+	
+	            csv_file = new Blob([data.join("")], {type: "text/csv"});
+	
+	            download_link = document.createElement("a");
+	
+	            download_link.download = dfile;
+	
+	            download_link.href = window.URL.createObjectURL(csv_file);
+	
+	            download_link.style.display = "none";
+	
+	            document.body.appendChild(download_link);
+	
+	            download_link.click();
+	
+	        ~);
+        my ($continue, $action) = check_continue($driver);
+        if ($continue){
+            $action->click;
+        } else {
+                last;
         }
     }
-    return 'stop';
 }
 
 sub check_continue{
-    my $tcount = 0;
+    my $driver = shift;
     my $continue = 0;
-    my $js = qq~
-       var continue = 0;
-       if (document.querySelector('#person-search-pagination-button') ){
-          document.querySelector('#person-search-pagination-button').click();
-          continue = 1;
-       }
-       return continue;
-    ~;
-
-print "Check for load page button\n";
-    while(1){
-        $continue =  $driver->execute_script($js);
-        if ($continue){
-            last;
-        } else {
-            sleep 3;
-            $tcount++;
-        }
-        if ($tcount > 10){
-            $continue = 0;
-            last;
-        }
+    sleep 3;
+    if ( element_exists({driver=>$driver,exp=>'//*[@id="person-search-pagination-button"]'}) ){
+       my $action = $driver->find_element('//*[@id="person-search-pagination-button"]');
+print " at click\n";
+       $continue = 1;
     }
-    return $continue;
+    return ($continue, $action);
 }
 
 sub read_log{
@@ -256,5 +233,24 @@ sub element_exists{
     return ($cnt);
 }
     
+
+sub check_pp{
+    $driver = shift;
+    if ( element_exists({driver=>$driver,exp=>'//*[text()[contains(.,"OK")]]'})){
+        $element = $driver->find_element('//*[text()[contains(.,"OK")]]');
+        $element->click;
+    }
+
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
+    
+    if ( element_exists({driver=>$driver,exp=>'//*[text()[contains(.,"Got It")]]'})){
+        $element = $driver->find_element('//*[text()[contains(.,"Got It")]]');
+        $element->click;
+        $element->click;
+    }
+    $driver->capture_screenshot("screenshot".${cnt}++.".png");
+}
+
+
 
 
