@@ -1,0 +1,101 @@
+<html">
+  <head>
+    <link rel="stylesheet" type="text/css" href="min.css">
+    <script type="text/javascript" src="javascript/jquery/jquery.min.js"></script>
+
+    <script>
+
+    $(document).ready( function() {
+        $.ajax({
+            type: 'POST',
+            url: '/cgi-bin/dispatch.pl',
+            dataType: "json",
+            data: { "select": "3" },
+            success: function(res) {
+                var data = res["data"]
+                var text = "<table>";
+                for ( i=0;i<data.length;i++){
+                    var v = data[i];
+                    text += "<tr><td>name: "+v["name"]+"   Description: "+v["description"]+"</td></tr>";
+                };
+                text += '</table>';
+                $("#msg").html(text);
+             },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+
+            });
+     });
+
+     function createdb(){
+        var dbname = document.getElementById('dbname');
+        var description = document.getElementById('description');
+        if (dbname.value === ""){
+            dbname.focus();
+            alert("must have database name");
+            return false;
+        } else {
+            var regex = new RegExp('[a-zA-Z0-9\s]+'); 
+            var check = regex.test(dbname.value);
+            if (! check ){
+                dbname.focus();
+                alert(" must be 8 or less characters without other punctuation" );
+                return false;
+            }
+        }
+        if (description.value === ""){
+            description.focus();
+            alert("must have database description");
+            return false;
+        }
+
+        var select = document.getElementById('select').value;
+        $.ajax({
+             type: 'POST',
+             url: '/cgi-bin/dispatch.pl',
+             async: false,
+             data: { dbname: dbname.value, description: description.value, select: select},
+             success: function(res) {
+                var data = res["data"]
+                var text = "<table>";
+                for ( i=0;i<data.length;i++){
+                    var v = data[i];
+                    text += "<tr><td>name: "+v["name"]+"   Description: "+v["description"]+"</td></tr>";
+                };
+                text += '</table>';
+                $("#msg").html(text);
+             },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+        }
+
+    </script>
+  </head>
+  <body>
+    <div>
+    <input type="hidden" id="select" value="2">
+    <h1> Create/Modify Database Info </h1>
+    <table>
+    <tr><td>Enter from Database Name (6 characters): </td>
+    <td><input type="text" id="dbname" size="8"></td>
+    <tr><td>Enter to Description:</td>
+    <td><input type="text" id="description" minlength="30" maxlength="30" size="30"></td>
+    </tr>
+    <tr>
+    <td><button onclick="return createdb()">Create/Modify</button></td>
+    <td><button onclick="window.location.href='/index.html'">Main Menu</button></td>
+    </tr>
+    <tr>
+    <td colspan="2"><div id="msg"></div></td>
+    </tr>
+    </table>
+    </div>
+  </body>
+  <script>
+  </script>
+</html>
+
+

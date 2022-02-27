@@ -34,17 +34,22 @@ RUN mkdir jquery
 WORKDIR /
 RUN cpan install Selenium::Chrome
 RUN cpan install Selenium::Remote::Driver
-COPY ./dispatch.pl /usr/lib/cgi-bin/
-COPY ./select_letters.html /var/www/html/
-COPY ./index.html /var/www/html/
-COPY ./jquery.min.js /usr/share/javascript/jquery/
-COPY ./ min.css /var/www/html/
+COPY ./vine/cgi/dispatch.pl /usr/lib/cgi-bin/
+COPY ./vine/Vine.pm /usr/lib/cgi-bin/
+COPY ./vine/cgi/facility.csv /usr/lib/cgi-bin/
+COPY ./vine/VConnect.pm /usr/lib/cgi-bin/
+COPY ./vine/load_facilities /usr/lib/cgi-bin/
+COPY ./vine/www/select_name.html /var/www/html/
+COPY ./vine/www/queue.html /var/www/html/
+COPY ./vine/www/index.html /var/www/html/
+COPY ./vine/www/jquery.min.js /usr/share/javascript/jquery/
+COPY ./vine/www/min.css /var/www/html/
+WORKDIR /usr/lib/cgi-bin/
+RUN perl load_facilities
 WORKDIR /home
 RUN mkdir vine
 WORKDIR /home/vine
-RUN mkdir code
-WORKDIR /home/vine/code
-COPY ./vine/vine_parse /vine/code/
-COPY ./vine/Vine.pm /vine/code/
+RUN mkdir data
+RUN mkdir files
 WORKDIR /
 CMD ["apache2ctl", "-D", "FOREGROUND"]

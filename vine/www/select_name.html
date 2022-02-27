@@ -1,0 +1,85 @@
+<html">
+  <head>
+    <link rel="stylesheet" type="text/css" href="min.css">
+    <script type="text/javascript" src="javascript/jquery/jquery.min.js"></script>
+
+    <script>
+
+     $( document ).ready(function() {
+        $.ajax({
+             type: 'GET',
+             url: '/cgi-bin/return_facilities.pl',
+             success: function(res) {
+                    formatTd(res.data);
+                   },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+     });
+
+     function formatTd(data){
+        var js = '<select id="facilitySelect"><option id="All">All Facilities</option>';
+        for ( var i=0;i<=data.length;i++ ){
+            js += '<option id="'+data[i]+'">'+data[i]+'</option>';
+        }
+        js += '</select>';
+        var td = document.getElementById('fselect');
+        td.innerHTML = js;
+    }
+        
+     
+     function start_vine(){
+        var pname = document.getElementById('partial_name');
+        var partial_name = pname.value;
+        if (partial_name.length < 4){
+            pname.focus();
+            alert(" Name must be greater than 4 characters ");
+            return false;
+        }
+        var re = /^[a-zA-Z]+$/;
+        if (! partial_name.match(re) ){
+            pname.focus();
+            alert("Must only be a series of Alphabetic Characters (no spaces)");
+            return false;
+        }
+        var fs = document.getElementById('facilitySelect');
+        var facility = fs.options[fs.selectedIndex].value;
+        var select = document.getElementById('select').value;
+        $.ajax({
+             type: 'POST',
+             url: '/cgi-bin/dispatch.pl',
+             data: { partial_name: partial_name, facility: facility, select: select },
+             success: function(res) {
+                        var txt = res["data"]
+                        $("#msg").html(txt);
+                   },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+        }
+
+    </script>
+  </head>
+  <body>
+    <div>
+    <input type="hidden" id="select" value="1">
+    <h1> Vine Entry </h1>
+    <table>
+    <tr><td>Facility: </td>
+    <td id="fselect"></td>
+    </tr>
+    <tr><td>Enter Partial Name: </td>
+    <td><input type="text" id="partial_name" minlength="4" maxlength="30" size="30"></td>
+    <td><button onclick="return start_vine()">Add job to queue</button></td>
+    <td><button onclick="window.location.href='/index.html'">Main Menu</button></td>
+    </tr>
+    <tr>
+    <td colspan="2"><div id="msg"></div></td>
+    </tr>
+    </table>
+    </div>
+  </body>
+</html>
+

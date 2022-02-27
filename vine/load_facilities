@@ -1,0 +1,101 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use lib qq(./);
+use Text::CSV_XS;
+use Data::Dumper;
+use Date::Manip;
+use Vine;
+
+my $new_db = '/home/vine/data/vine.db';
+
+my $vdb;
+if ($new_db) {
+    $vdb = Vine->new( { "database" => $new_db } );
+}
+else {
+    $vdb = Vine->new();
+}
+
+my $csv_file = './facility.csv';
+my $csv = Text::CSV_XS->new();
+
+my %rec_hash;
+while (<DATA>){
+    chomp;
+    next if ( m/^\s+$/ );
+    $rec_hash{$_} ='';
+}
+
+build_facility_db();
+
+exit;
+
+sub build_facility_db {
+
+    my $first_time = 1;
+    open my $fh, "<:encoding(utf8)", "$csv_file" or die "$csv_file : $!";
+    while ( my $row = $csv->getline($fh) ) {
+        if ($first_time) {
+            $first_time = 0;
+            next;
+        }
+        my $name = $row->[0];
+        $name =~ s/^\s+//;
+        $name =~ s/\s+$//;
+        $name =~ s/\s+/ /g;
+        my $n    = $row->[0];
+        my $cnt = 0;
+        foreach my $key ( sort keys %rec_hash ){
+            $rec_hash{$key} = $row->[$cnt];
+            $cnt++;
+        }
+        my @where = ();
+        push @where, $n;
+        my $sql = 'select * from facility where name = ?';
+        my $sth = $vdb->do_sql({ sql => $sql, where => \@where });
+        my $frec = $sth->fetchrow_hashref();
+        if ($frec){
+            @where = ();
+            $sql = 'update facility set ';
+            foreach my $key ( sort keys %rec_hash ){
+                push @where, $rec_hash{$key};
+                $key =~ s/^\d+\_//;
+                $sql .= " $key = ?,";
+            }
+            $sql =~ s/,$/ /;
+            $sql .= ' where id = ? ';
+            push @where, $frec->{id};
+            $vdb->do_sql({ sql=>$sql, where=>\@where});
+        } else {
+            @where = ();
+            my $cols;
+            my @keys = sort keys %rec_hash;
+            foreach my $key ( sort keys %rec_hash ){
+                $key =~ s/^\d+\_//;
+                $cols .= " ${key}, ";
+            }
+            $cols =~ s/,\s+$//;
+            foreach my $key ( sort keys %rec_hash ) {
+                push @where, $rec_hash{$key};
+            }
+            my $qmarks = '?,' x ( scalar @where );
+            $qmarks =~ s/,$//;
+            $sql = qq{insert into facility ($cols) values ($qmarks)};
+            $vdb->do_sql({ sql=>$sql, where=>\@where});
+        }
+        foreach my $k ( sort keys %rec_hash ){
+            $rec_hash{$k} = '';
+        }
+    }
+    close $fh or die "$csv_file : $!";
+}
+
+__DATA__
+01_name
+02_address
+03_city
+04_zip
+05_county
+06_website

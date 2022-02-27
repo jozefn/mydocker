@@ -1,0 +1,79 @@
+<html">
+  <head>
+    <link rel="stylesheet" type="text/css" href="min.css">
+    <script type="text/javascript" src="javascript/jquery/jquery.min.js"></script>
+
+    <script>
+
+     $( document ).ready(function() {
+        $.ajax({
+             type: 'GET',
+             url: '/cgi-bin/return_user.pl',
+             success: function(res) {
+                    rec = res.data;
+                    document.getElementById('user_name').value = rec.user;
+                    document.getElementById('password').value = rec.password;
+                   },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+     });
+
+     
+     function start_vine(){
+        var uname = document.getElementById('user_name');
+        var pass = document.getElementById('password');
+        var user_name = uname.value;
+        var password = pass.value;
+
+        var re = /^[a-zA-Z0-9\_]+$/;
+        if (! user_name.match(re) ){
+            uname.focus();
+            alert("Vine User Name must be a combination of Alphabetic Characters, Numbers and underscores");
+            return false;
+        }
+        var passRe = /^[a-zA-Z0-9]+$/;
+        if (! password.match(passRe) ){
+            pass.focus();
+            alert("Vine Password must be Alphabetic Characters, Numbers");
+            return false;
+        }
+
+        var select = document.getElementById('select').value;
+        $.ajax({
+             type: 'POST',
+             url: '/cgi-bin/dispatch.pl',
+             data: { user_name: user_name, password: password, select: select },
+             success: function(res) {
+                        var txt = res["data"]
+                        $("#msg").html(txt);
+                   },
+             error: function (xhr, status, errorThrown) {
+                    alert(" status: "+xhr.status+" response: "+xhr.responseText);
+                   },
+           });
+        }
+
+    </script>
+  </head>
+  <body>
+    <div>
+    <input type="hidden" id="select" value="2">
+    <h1> Vine Entry </h1>
+    <table>
+    <tr><td>Enter Vine User Name: </td>
+    <td><input type="text" id="user_name" minlength="4" maxlength="30" size="30"></td>
+    <tr><td>Enter Vine Password: </td>
+    <td><input type="text" id="password" minlength="4" maxlength="30" size="30"></td>
+    <td><button onclick="return start_vine()">Add Vine User/Password</button></td>
+    <td><button onclick="window.location.href='/index.html'">Main Menu</button></td>
+    </tr>
+    <tr>
+    <td colspan="2"><div id="msg"></div></td>
+    </tr>
+    </table>
+    </div>
+  </body>
+</html>
+
